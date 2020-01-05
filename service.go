@@ -24,6 +24,9 @@ var (
 	ldapBaseDn        = flag.String("ldap_basedn", "", "")
 )
 
+// ServiceName defines the name of ldap service used for dependency injection
+const ServiceName = "ldap"
+
 // IService defines all public functions of the ldap service
 type IService interface {
 	gousu.IService
@@ -101,6 +104,11 @@ func (s *Service) Reconnect() error {
 	s.reconnecting = false
 
 	return err
+}
+
+// Name returns the name of ldap service from ServiceName
+func (s *Service) Name() string {
+	return ServiceName
 }
 
 // Start starts the ldap service by compiling the ldap patterns and etablishing the ldap connection
@@ -236,9 +244,12 @@ func (s *Service) SimpleLogin(username string, password string, attributes []str
 	return &user, nil
 }
 
-// NewService retuns a new initialized instance of the ldap service
-func NewService() IService {
+// NewService is the ServiceFactory for ldap service
+func NewService(ctx gousu.IContext) gousu.IService {
 	return &Service{
-		log: gousu.GetLogger("service.ldap"),
+		log: gousu.GetLogger(fmt.Sprintf("service.%s", ServiceName)),
 	}
 }
+
+// Assert NewService fullfills gousu.ServiceFactory
+var _ (gousu.ServiceFactory) = NewService
